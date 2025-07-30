@@ -1,0 +1,38 @@
+
+body {
+  font-family: sans-serif;
+  padding: 20px;
+  text-align: center;
+}
+.card {
+  border: 2px solid #ccc;
+  padding: 40px;
+  margin: 20px auto;
+  width: 80%;
+  max-width: 400px;
+  font-size: 2em;
+  min-height: 120px;
+}
+.controls select {
+  margin: 0 10px;
+}
+.buttons button {
+  margin: 5px;
+}
+#progress {
+  width: 80%;
+  max-width: 400px;
+  margin: 20px auto;
+  background: #eee;
+  height: 20px;
+  position: relative;
+}
+#progress-bar {
+  height: 100%;
+  background: #4caf50;
+  width: 0%;
+}
+#progress-text {
+  margin-top: 5px;
+  font-size: 0.9em;
+}

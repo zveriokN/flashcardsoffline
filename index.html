@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Карточки</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="controls">
+    <select id="direction">
+      <option value="ru-ja">Русский → Японский</option>
+      <option value="ja-ru">Японский → Русский</option>
+    </select>
+    <select id="topic-select">
+      <option value="all">Все темы</option>
+    </select>
+  </div>
+
+  <div id="card" class="card">Загрузка...</div>
+
+  <div class="buttons">
+    <button id="hard">Сложно</button>
+    <button id="easy">Легко</button>
+    <button id="next">Следующая</button>
+    <button id="reset">Сбросить прогресс по теме</button>
+  </div>
+
+  <div id="progress">
+    <div id="progress-bar"></div>
+    <div id="progress-text"></div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
+</body>
+</html>
