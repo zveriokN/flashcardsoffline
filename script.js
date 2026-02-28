@@ -38,7 +38,7 @@ function loadSheetJSON() {
           const ru = (c[0]?.v ?? "").toString().trim();
           const ja = (c[1]?.v ?? "").toString().trim();
           const topicCell = c[2];
-const topic = (topicCell?.v ?? topicCell?.f ?? "Без темы").toString().trim();
+          const topic = (topicCell?.v ?? topicCell?.f ?? "Без темы").toString().trim();
 
           if (!ru || !ja) return null;
 
