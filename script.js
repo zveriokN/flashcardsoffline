@@ -71,6 +71,9 @@ function loadSheetJSON() {
 }
 
 function populateTopics() {
+  // очищаем всё, кроме первого пункта "Все темы"
+  topicSelect.innerHTML = '<option value="all">Все темы</option>';
+
   const topics = [...new Set(cards.map(c => c.topic))];
   topics.forEach(t => {
     const opt = document.createElement("option");
