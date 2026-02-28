@@ -8,18 +8,65 @@ let flipped = false;
 const directionSelect = document.getElementById("direction");
 const topicSelect = document.getElementById("topic-select");
 
-function loadCSV() {
-  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSxo3ndoMSpz1pCg--2q2yoYGyZU85EIEIKBtX9gpYejA10jtEJK0rOO38QIwHX7efUj3A9tEVyU6fd/pub?output=csv")
+const SHEET_ID = "1bbnYBa4qb7UMLY7TwCgG_POn1rhLfhAb02UDCx_jBQc";
+const SHEET_NAME = "Лист1"; // ← Поменяй на точное название листа (как вкладка снизу в таблице)
+
+function buildGvizUrl() {
+  const sheet = encodeURIComponent(SHEET_NAME);
+  const tq = encodeURIComponent("select A,B,C where A is not null");
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${sheet}&tq=${tq}`;
+}
+
+function parseGviz(text) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+function loadSheetJSON() {
+  const url = buildGvizUrl();
+
+  fetch(url)
     .then(res => res.text())
     .then(text => {
-      const lines = text.trim().split("\n").slice(1);
-      cards = lines.map((line, i) => {
-        const [ru, ja, topic] = line.split(",");
-        return { id: i, ru: ru.trim(), ja: ja.trim(), topic: topic.trim() };
-      });
+      const gviz = parseGviz(text);
+      const rows = gviz.table.rows || [];
+
+      cards = rows
+        .map((row) => {
+          const c = row.c || [];
+          const ru = (c[0]?.v ?? "").toString().trim();
+          const ja = (c[1]?.v ?? "").toString().trim();
+          const topic = (c[2]?.v ?? "Без темы").toString().trim();
+
+          if (!ru || !ja) return null;
+
+          // Стабильный id: прогресс не "съезжает" при добавлении строк в таблицу
+          const id = `${ru}|||${ja}|||${topic}`;
+          return { id, ru, ja, topic };
+        })
+        .filter(Boolean);
+
+      // кэш карточек для офлайна
+      localStorage.setItem("cards_cache", JSON.stringify(cards));
+
       populateTopics();
       updateFiltered();
       showNext();
+    })
+    .catch(err => {
+      console.error("Sheet JSON load failed:", err);
+
+      // офлайн-фолбэк: используем последнюю сохранённую копию
+      const cached = localStorage.getItem("cards_cache");
+      if (cached) {
+        cards = JSON.parse(cached);
+        populateTopics();
+        updateFiltered();
+        showNext();
+      } else {
+        document.getElementById("card").textContent = "Не удалось загрузить данные";
+      }
     });
 }
 
@@ -103,4 +150,4 @@ function saveProgress() {
   localStorage.setItem("progress", JSON.stringify(progress));
 }
 
-loadCSV();
+loadSheetJSON();
