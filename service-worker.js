@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flashcards-cache-v6'; // ← увеличивай номер при каждом обновлении
+const CACHE_NAME = 'flashcards-cache-v7'; // ← увеличивай номер при каждом обновлении
 
 // В GitHub Pages сайт живёт в /<repo>/, поэтому берём base из scope:
 const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, '') + '/';
