@@ -13,7 +13,7 @@ const SHEET_NAME = "Лист1"; // ← Поменяй на точное назв
 
 function buildGvizUrl() {
   const sheet = encodeURIComponent(SHEET_NAME);
-  const tq = encodeURIComponent("select A,B,toText(C) where A is not null");
+  const tq = encodeURIComponent("select A,B,C where A is not null");
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${sheet}&tq=${tq}`;
 }
 
