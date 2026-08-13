@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flashcards-cache-v9';
+const CACHE_NAME = 'flashcards-cache-v10';
 
 const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, '') + '/';
 
