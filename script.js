@@ -13,10 +13,23 @@ function loadCSV() {
     .then(res => res.text())
     .then(text => {
       const lines = text.trim().split("\n").slice(1);
-      cards = lines.map((line, i) => {
-        const [ru, ja, topic] = line.split(",");
-        return { id: i, ru: ru.trim(), ja: ja.trim(), topic: topic.trim() };
-      });
+
+cards = lines
+  .map((line, i) => {
+    const parts = line.split(",");
+
+    const ru = parts[0] || "";
+    const ja = parts[1] || "";
+    const topic = parts[2] || "";
+
+    return {
+      id: i,
+      ru: ru.trim(),
+      ja: ja.trim(),
+      topic: topic.trim()
+    };
+  })
+  .filter(card => card.ru || card.ja);
       populateTopics();
       updateFiltered();
       showNext();
