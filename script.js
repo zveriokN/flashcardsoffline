@@ -8,73 +8,35 @@ let flipped = false;
 const directionSelect = document.getElementById("direction");
 const topicSelect = document.getElementById("topic-select");
 
-const SHEET_ID = "1bbnYBa4qb7UMLY7TwCgG_POn1rhLfhAb02UDCx_jBQc";
-const SHEET_NAME = "Лист1"; // ← Поменяй на точное название листа (как вкладка снизу в таблице)
-
-function buildGvizUrl() {
-  const sheet = encodeURIComponent(SHEET_NAME);
-  const tq = encodeURIComponent("select A,B,D where A is not null");
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${sheet}&tq=${tq}`;
-}
-
-function parseGviz(text) {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  return JSON.parse(text.slice(start, end + 1));
-}
-
-function loadSheetJSON() {
-  const url = buildGvizUrl();
-
-  fetch(url)
+function loadCSV() {
+  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSxo3ndoMSpz1pCg--2q2yoYGyZU85EIEIKBtX9gpYejA10jtEJK0rOO38QIwHX7efUj3A9tEVyU6fd/pub?output=csv")
     .then(res => res.text())
     .then(text => {
-      const gviz = parseGviz(text);
-      const rows = gviz.table.rows || [];
+      const lines = text.trim().split("\n").slice(1);
 
-      cards = rows
-        .map((row) => {
-          const c = row.c || [];
-          const ru = (c[0]?.v ?? "").toString().trim();
-          const ja = (c[1]?.v ?? "").toString().trim();
-          const topicCell = c[2];
-          const topic = (topicCell?.v ?? topicCell?.f ?? "Без темы").toString().trim();
+cards = lines
+  .map((line, i) => {
+    const parts = line.split(",");
 
-          if (!ru || !ja) return null;
+    const ru = parts[0] || "";
+    const ja = parts[1] || "";
+    const topic = parts[2] || "";
 
-          // Стабильный id: прогресс не "съезжает" при добавлении строк в таблицу
-          const id = `${ru}|||${ja}|||${topic}`;
-          return { id, ru, ja, topic };
-        })
-        .filter(Boolean);
-
-      // кэш карточек для офлайна
-      localStorage.setItem("cards_cache", JSON.stringify(cards));
-
+    return {
+      id: i,
+      ru: ru.trim(),
+      ja: ja.trim(),
+      topic: topic.trim()
+    };
+  })
+  .filter(card => card.ru || card.ja);
       populateTopics();
       updateFiltered();
       showNext();
-    })
-    .catch(err => {
-      console.error("Sheet JSON load failed:", err);
-
-      // офлайн-фолбэк: используем последнюю сохранённую копию
-      const cached = localStorage.getItem("cards_cache");
-      if (cached) {
-        cards = JSON.parse(cached);
-        populateTopics();
-        updateFiltered();
-        showNext();
-      } else {
-        document.getElementById("card").textContent = "Не удалось загрузить данные";
-      }
     });
 }
 
 function populateTopics() {
-  // очищаем всё, кроме первого пункта "Все темы"
-  topicSelect.innerHTML = '<option value="all">Все темы</option>';
-
   const topics = [...new Set(cards.map(c => c.topic))];
   topics.forEach(t => {
     const opt = document.createElement("option");
@@ -104,13 +66,44 @@ function showNext() {
   updateProgress();
 }
 
+function renderCardText(cardElement, text, isJapanese) {
+  cardElement.replaceChildren();
+
+  // Японские записи вида 来ます 「きます」
+  // показываем на двух строках без кавычек.
+  if (isJapanese) {
+    const match = text.match(/^(.+?)\s*「([^」]+)」\s*$/);
+
+    if (match) {
+      const wordLine = document.createElement("div");
+      const readingLine = document.createElement("div");
+
+      wordLine.textContent = match[1].trim();
+      readingLine.textContent = match[2].trim();
+
+      cardElement.appendChild(wordLine);
+      cardElement.appendChild(readingLine);
+      return;
+    }
+  }
+
+  cardElement.textContent = text;
+}
+
 function showCard() {
   const card = document.getElementById("card");
   if (!current) return;
+
   const dir = directionSelect.value;
-  card.textContent = flipped
+  const showingJapanese =
+    (dir === "ru-ja" && flipped) ||
+    (dir === "ja-ru" && !flipped);
+
+  const text = flipped
     ? (dir === "ru-ja" ? current.ja : current.ru)
     : (dir === "ru-ja" ? current.ru : current.ja);
+
+  renderCardText(card, text, showingJapanese);
 }
 
 document.getElementById("card").addEventListener("click", () => {
@@ -154,4 +147,4 @@ function saveProgress() {
   localStorage.setItem("progress", JSON.stringify(progress));
 }
 
-loadSheetJSON();
+loadCSV();
