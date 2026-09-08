@@ -1,4 +1,3 @@
-
 let cards = [];
 let progress = JSON.parse(localStorage.getItem('progress') || '{}');
 let filtered = [];
@@ -8,28 +7,75 @@ let flipped = false;
 const directionSelect = document.getElementById("direction");
 const topicSelect = document.getElementById("topic-select");
 
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (char === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      row.push(cell);
+      cell = "";
+    } else if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && text[i + 1] === "\n") {
+        i++;
+      }
+
+      row.push(cell);
+      cell = "";
+
+      if (row.some(value => value.trim() !== "")) {
+        rows.push(row);
+      }
+
+      row = [];
+    } else {
+      cell += char;
+    }
+  }
+
+  if (cell.length || row.length) {
+    row.push(cell);
+
+    if (row.some(value => value.trim() !== "")) {
+      rows.push(row);
+    }
+  }
+
+  return rows;
+}
+
 function loadCSV() {
   fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSxo3ndoMSpz1pCg--2q2yoYGyZU85EIEIKBtX9gpYejA10jtEJK0rOO38QIwHX7efUj3A9tEVyU6fd/pub?output=csv")
     .then(res => res.text())
     .then(text => {
-      const lines = text.trim().split("\n").slice(1);
+      const rows = parseCSV(text).slice(1);
 
-cards = lines
-  .map((line, i) => {
-    const parts = line.split(",");
+      cards = rows
+        .map((parts, i) => {
+          const ru = parts[0] || "";
+          const ja = parts[1] || "";
+          const topic = parts[2] || "";
 
-    const ru = parts[0] || "";
-    const ja = parts[1] || "";
-    const topic = parts[2] || "";
+          return {
+            id: i,
+            ru: ru.trim(),
+            ja: ja.trim(),
+            topic: topic.trim()
+          };
+        })
+        .filter(card => card.ru || card.ja);
 
-    return {
-      id: i,
-      ru: ru.trim(),
-      ja: ja.trim(),
-      topic: topic.trim()
-    };
-  })
-  .filter(card => card.ru || card.ja);
       populateTopics();
       updateFiltered();
       showNext();
